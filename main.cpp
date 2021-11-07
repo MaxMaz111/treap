@@ -11,7 +11,7 @@ using namespace std;
 
 static random_device rd;
 static mt19937 rng{rd()};
-long long suparand(long long min_val, long long max_val) {
+long long random(long long min_val, long long max_val) {
     std::uniform_int_distribution<long long> uid(min_val, max_val);
     return uid(rng);
 }
@@ -20,18 +20,22 @@ struct treap {
     treap *nodeL = nullptr, *nodeR = nullptr;
     int key;
     int priority;
+    explicit treap(int k) {
+        key = k;
+        priority = (int) random(1, 1000000);
+    }
 };
 
 void print(treap *current, ll depth = 0) {
     if (current->nodeL && current->nodeR) {
         print(current->nodeR, depth + 1);
         for (ll i = 0; i < depth; ++i) cout << "\t";
-        cout << current->key << '/' << current->priority << endl;
+        cout << current->key << '/' << current->priority << "\n";
         print(current->nodeL, depth + 1);
     } else {
-        for (ll i = 0; i < depth; ++i) cout << "\t";
-        cout << current->key << '/' << current->priority << endl;
         if (current->nodeR) print(current->nodeR, depth + 1);
+        for (ll i = 0; i < depth; ++i) cout << "\t";
+        cout << current->key << '/' << current->priority << "\n";
         if (current->nodeL) print(current->nodeL, depth + 1);
     }
 }
@@ -64,36 +68,6 @@ treap* merge(treap *t1, treap *t2) {
     }
 }
 
-int maximum = INT_MAX;
-void next(treap *root, int x) {
-    if (root == nullptr) {
-        return;
-    }
-    if (root->key > x) {
-        maximum = min(root->key, maximum);
-        next(root->nodeL, x);
-        next(root->nodeR, x);
-    } else {
-        next(root->nodeL, x);
-        next(root->nodeR, x);
-    }
-}
-
-int minimum = INT_MIN;
-void prev(treap *root, int x) {
-    if (root == nullptr) {
-        return;
-    }
-    if (root->key < x) {
-        minimum = max(root->key, minimum);
-        prev(root->nodeL, x);
-        prev(root->nodeR, x);
-    } else {
-        prev(root->nodeL, x);
-        prev(root->nodeR, x);
-    }
-}
-
 bool exists(treap *root, int key) {
     if (root != nullptr) {
         if (key < root->key) {
@@ -109,19 +83,9 @@ bool exists(treap *root, int key) {
 }
 
 treap* insert(treap* root, int k) {
-    if (root->nodeR == nullptr && root->nodeL == nullptr && root->priority == 0) {
-        treap *temp;
-        temp = new treap();
-        temp->key = k;
-        temp->priority = (int) suparand(1, 1000000);
-        return temp;
-    }
     if (!exists(root, k)) {
         pair<treap*, treap*> t = split(root, k);
-        auto *temp = new treap();
-        temp->key = k;
-        temp->priority = (int) suparand(1, 1000000);
-        treap *t1 = merge(t.first, temp);
+        treap *t1 = merge(t.first, new treap(k));
         return merge(t1, t.second);
     } else {
         return root;
@@ -148,12 +112,11 @@ int main() {
 //    cin.tie(nullptr);
 //    cout.tie(nullptr);
     string query;
-    treap *root;
-    root = new treap();
+    treap *root = nullptr;
     while (cin >> query) {
         int n;
         cin >> n;
-        if (query == "insert") {
+        if (query == "i") {
             root = insert(root, n);
             cout << NEWLINE;
             print(root);
@@ -169,21 +132,12 @@ int main() {
             cout << NEWLINE;
             print(root);
             cout << NEWLINE;
-        } else if (query == "next") {
-            maximum = INT_MAX;
-            next(root, n);
-            if (maximum == INT_MAX) cout << "none" << endl;
-            else cout << maximum << endl;
+        } else if (query == "split") {
+            pair <treap*, treap*> temp = split(root, n);
             cout << NEWLINE;
-            print(root);
-            cout << NEWLINE;
-        } else if (query == "prev") {
-            minimum = INT_MIN;
-            prev(root, n);
-            if (minimum == INT_MIN) cout << "none" << endl;
-            else cout << minimum << endl;
-            cout << NEWLINE;
-            print(root);
+            print(temp.first);
+            cout << NEWLINE << NEWLINE;
+            print(temp.second);
             cout << NEWLINE;
         }
     }
